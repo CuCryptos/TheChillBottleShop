@@ -18,6 +18,27 @@ the licensed premises or get it delivered locally with an ID check.
    Postgres/Supabase tables plus the allocation engine (`reserve`,
    `cancel_reservation`, `promote_waitlist`, `receive_drop_item`).
 
+## The waitlist site (Phase 0)
+
+A Next.js app (`app/`) with a 21+ age gate, a Hawaiʻi-only waitlist form, Founding
+Member interest, and invite links. It doesn't sell or reserve anything.
+
+```sh
+cp .env.example .env.local   # add Supabase URL + service role key
+npm install
+npm run dev                  # http://localhost:3000
+npm test && npm run typecheck
+```
+
+Without Supabase keys, `npm run dev` keeps signups in memory so you can try the
+form. A production build refuses to accept signups until the keys are set.
+
+**Deploying:** apply `supabase/migrations/` to your Supabase project, import this
+repo into Vercel, set `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` and
+`NEXT_PUBLIC_SITE_URL`, and point your domain at it. To pick Founding invites,
+use the `waitlist_ranked` view (Founding interest first, then referrals, then
+signup date).
+
 ## Running the schema tests
 
 Needs a Postgres 15+ server you can create databases on:
@@ -28,9 +49,10 @@ DATABASE_URL=postgres://postgres@localhost:5432/postgres supabase/tests/run.sh
 
 The tests check tier early-access windows, per-member limits, ID and age
 requirements, waitlist promotion, the no-oversell guarantee, short-shipment
-reconciliation, the inventory ledger, and the 30-day wholesaler invoice window.
+reconciliation, the inventory ledger, the 30-day wholesaler invoice window, and
+the waitlist's age, ZIP, duplicate-email and referral rules.
 
 ## Status
 
-Phase 0: planning and data model. Next up is the Next.js waitlist site. Don't
-take any payment tied to beer until the Class 4 retail license is issued.
+Phase 0: planning, data model and waitlist site. Don't take any payment tied
+to beer until the Class 4 retail license is issued.

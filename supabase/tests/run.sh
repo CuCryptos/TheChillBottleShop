@@ -20,5 +20,7 @@ SQL
 for f in supabase/migrations/*.sql; do
   psql "$test_url" -q -v ON_ERROR_STOP=1 -f "$f"
 done
-psql "$test_url" -q -v ON_ERROR_STOP=1 -o /dev/null -f supabase/tests/allocation_test.sql 2>&1 \
-  | sed -n "s/.*NOTICE:  //p; /ERROR/p; /passed/p"
+for t in supabase/tests/*_test.sql; do
+  psql "$test_url" -q -v ON_ERROR_STOP=1 -o /dev/null -f "$t" 2>&1 \
+    | sed -n "s/.*NOTICE:  //p; /ERROR/p; /passed/p"
+done
