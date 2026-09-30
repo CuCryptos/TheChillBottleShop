@@ -55,7 +55,7 @@ insert into drop_items (id, drop_id, product_id, planned_qty, price_cents) value
 -- Tests ---------------------------------------------------------------------
 select pg_temp.assert_raises(
   $$select reserve('00000000-0000-0000-0000-00000000000b', '00000000-0000-0000-0000-0000000000a1', 1)$$,
-  'reservations open for your tier', 'member tier cannot reserve before its early-access window');
+  'reservations open for you at', 'member tier cannot reserve before its early-access window');
 
 select pg_temp.assert_raises(
   $$select reserve('00000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-0000000000a1', 3)$$,
