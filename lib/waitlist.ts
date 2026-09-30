@@ -65,3 +65,14 @@ export async function saveSignup(input: SignupInput): Promise<SaveResult> {
   }
   return { status: "created", referralCode: data.referral_code };
 }
+
+// Records that the confirmation email went out, so unsent ones can be re-sent later.
+export async function markConfirmationSent(referralCode: string): Promise<void> {
+  const db = supabase();
+  if (!db) return;
+  const { error } = await db
+    .from("waitlist_signups")
+    .update({ confirmation_sent_at: new Date().toISOString() })
+    .eq("referral_code", referralCode);
+  if (error) console.error("waitlist: could not record confirmation email:", error);
+}
