@@ -39,7 +39,14 @@ form. A production build refuses to accept signups until the keys are set.
 
 **Deploying:** apply `supabase/migrations/` to your Supabase project, import this
 repo into Vercel, set `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` and
-`NEXT_PUBLIC_SITE_URL`, and point your domain at it. To pick Founding invites,
+`NEXT_PUBLIC_SITE_URL`, and point your domain at it.
+
+**Confirmation emails:** new signups get a confirmation email with their invite
+link, sent through [Resend](https://resend.com) after the response goes out.
+Set `RESEND_API_KEY` and `EMAIL_FROM` (an address on a domain verified in
+Resend), plus optionally `EMAIL_REPLY_TO`. Without them, signups still work and
+the email is skipped. `waitlist_signups.confirmation_sent_at` records each send,
+so rows where it's null can be re-sent later. To pick Founding invites,
 use the `waitlist_ranked` view (Founding interest first, then referrals, then
 signup date).
 

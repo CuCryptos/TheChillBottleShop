@@ -1,7 +1,11 @@
 "use server";
 
+import { after } from "next/server";
 import { parseSignup, type FieldErrors } from "@/lib/validate";
-import { saveSignup } from "@/lib/waitlist";
+import { markConfirmationSent, saveSignup } from "@/lib/waitlist";
+import { sendConfirmation } from "@/lib/email";
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 export type JoinState =
   | { status: "idle" }
@@ -32,7 +36,18 @@ export async function joinWaitlist(_prev: JoinState, form: FormData): Promise<Jo
 
   const result = await saveSignup(parsed.data);
   if (result.status === "created") {
-    return { status: "joined", firstName: parsed.data.firstName, referralCode: result.referralCode };
+    const { email, firstName, wantsFounding } = parsed.data;
+    const { referralCode } = result;
+    // Send after the response so a slow or failing email provider never delays the signup.
+    after(async () => {
+      const sent = await sendConfirmation(
+        email,
+        { firstName, wantsFounding, inviteUrl: `${siteUrl}/?ref=${referralCode}` },
+        `waitlist-confirmation/${referralCode}`,
+      );
+      if (sent === "sent") await markConfirmationSent(referralCode);
+    });
+    return { status: "joined", firstName, referralCode };
   }
   return { status: result.status, values: valuesOf(form) };
 }
