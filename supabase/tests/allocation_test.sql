@@ -146,4 +146,12 @@ select pg_temp.assert_eq(
   (select days_remaining from purchase_orders_payment_due where po_number = 'PO-1'),
   5, 'invoice shows 5 days left under 30-day rule');
 
+-- Public API roles cannot call allocation functions.
+select pg_temp.assert_eq(
+  has_function_privilege('anon', 'reserve(uuid, uuid, integer, text)', 'execute')
+  or has_function_privilege('authenticated', 'reserve(uuid, uuid, integer, text)', 'execute')
+  or has_function_privilege('anon', 'receive_drop_item(uuid, integer)', 'execute')
+  or has_function_privilege('authenticated', 'cancel_reservation(uuid, text)', 'execute'),
+  false, 'API roles cannot execute allocation functions');
+
 \echo 'All allocation tests passed.'

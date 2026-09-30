@@ -211,7 +211,8 @@ group by di.id, d.id, p.id;
 -- Live tier for a member, or null if they have no active membership.
 create function member_active_tier(p_member_id uuid)
 returns membership_tiers
-language sql stable as $$
+language sql stable
+set search_path = public as $$
   select t.* from memberships m
   join membership_tiers t on t.code = m.tier_code
   where m.member_id = p_member_id
@@ -226,7 +227,8 @@ $$;
 create function reserve(p_member_id uuid, p_drop_item_id uuid, p_qty integer,
                         p_payment_method_id text default null)
 returns reservations
-language plpgsql as $$
+language plpgsql
+set search_path = public as $$
 declare
   v_member  members;
   v_tier    membership_tiers;
@@ -307,7 +309,8 @@ $$;
 -- request that is larger than the units available (no partial fills).
 create function promote_waitlist(p_drop_item_id uuid)
 returns integer
-language plpgsql as $$
+language plpgsql
+set search_path = public as $$
 declare
   v_item     drop_items;
   v_avail    integer;
@@ -340,7 +343,8 @@ $$;
 -- Member or staff cancels an allocated/waitlisted reservation before it is charged.
 create function cancel_reservation(p_reservation_id uuid, p_reason text default 'member cancelled')
 returns reservations
-language plpgsql as $$
+language plpgsql
+set search_path = public as $$
 declare
   v_res reservations;
 begin
@@ -372,7 +376,8 @@ $$;
 -- Over shipment: waitlisted members are promoted, oldest first.
 create function receive_drop_item(p_drop_item_id uuid, p_received_qty integer)
 returns drop_items
-language plpgsql as $$
+language plpgsql
+set search_path = public as $$
 declare
   v_item drop_items;
   v_over integer;
@@ -458,11 +463,14 @@ create policy drop_items_public_read on drop_items
 alter view drop_item_allocation_status  set (security_invoker = true);
 alter view purchase_orders_payment_due  set (security_invoker = true);
 
--- Allocation functions are called from trusted server code only.
-revoke execute on function reserve(uuid, uuid, integer, text)  from public;
-revoke execute on function promote_waitlist(uuid)              from public;
-revoke execute on function cancel_reservation(uuid, text)      from public;
-revoke execute on function receive_drop_item(uuid, integer)    from public;
+-- Allocation functions are called from trusted server code only. Supabase
+-- grants EXECUTE on public-schema functions to its API roles, so revoke from
+-- those explicitly as well as from PUBLIC.
+revoke execute on function member_active_tier(uuid)               from public, anon, authenticated;
+revoke execute on function reserve(uuid, uuid, integer, text)     from public, anon, authenticated;
+revoke execute on function promote_waitlist(uuid)                 from public, anon, authenticated;
+revoke execute on function cancel_reservation(uuid, text)         from public, anon, authenticated;
+revoke execute on function receive_drop_item(uuid, integer)       from public, anon, authenticated;
 
 -- ---------------------------------------------------------------------------
 -- Seed tiers (placeholder pricing — adjust before launch)

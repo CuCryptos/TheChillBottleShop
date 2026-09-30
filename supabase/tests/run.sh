@@ -11,8 +11,14 @@ psql "$DATABASE_URL" -qc "create database $db"
 trap 'psql "$DATABASE_URL" -qc "drop database if exists $db with (force)"' EXIT
 test_url="${DATABASE_URL%/*}/$db"
 
-# Minimal stand-in for Supabase's auth schema so RLS policies compile.
+# Minimal stand-in for Supabase: API roles, their default grants, and auth.uid().
 psql "$test_url" -q -v ON_ERROR_STOP=1 <<'SQL'
+-- Mirror Supabase: API roles exist and get EXECUTE on new public functions by default.
+do $$ begin
+  if not exists (select 1 from pg_roles where rolname = 'anon') then create role anon nologin; end if;
+  if not exists (select 1 from pg_roles where rolname = 'authenticated') then create role authenticated nologin; end if;
+end $$;
+alter default privileges in schema public grant execute on functions to anon, authenticated;
 create schema if not exists auth;
 create or replace function auth.uid() returns uuid language sql stable as $$ select null::uuid $$;
 SQL
