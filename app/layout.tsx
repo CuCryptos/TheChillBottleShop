@@ -1,8 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { cookies } from "next/headers";
 import { Fraunces, Inter } from "next/font/google";
-import { AgeGate } from "./AgeGate";
-import { AGE_COOKIE } from "@/lib/age";
 import "./globals.css";
 
 const display = Fraunces({ subsets: ["latin"], variable: "--font-display", axes: ["opsz"] });
@@ -24,13 +21,10 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = { themeColor: "#0e2a33" };
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const verified = (await cookies()).get(AGE_COOKIE)?.value === "1";
-
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${display.variable} ${body.variable}`}>
       <body>
-        {!verified && <AgeGate />}
         {children}
       </body>
     </html>

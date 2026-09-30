@@ -1,22 +1,12 @@
 import "server-only";
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { randomBytes } from "node:crypto";
+import { db as supabase } from "./db";
 import type { SignupInput } from "./validate";
 
 export type SaveResult =
   | { status: "created"; referralCode: string }
   | { status: "duplicate" }
   | { status: "error" };
-
-let client: SupabaseClient | null = null;
-
-function supabase(): SupabaseClient | null {
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
-  client ??= createClient(url, key, { auth: { persistSession: false } });
-  return client;
-}
 
 // Local development without Supabase: keep signups in memory so the form works.
 const devSignups = new Map<string, string>();

@@ -47,4 +47,12 @@ do $$ begin
   raise notice 'ok  waitlist_ranked counts referrals';
 end $$;
 
+update waitlist_signups set confirmation_sent_at = now() where email = 'kai@example.com';
+do $$ begin
+  if (select confirmation_sent_at from waitlist_ranked where email = 'kai@example.com') is null then
+    raise exception 'FAIL waitlist_ranked confirmation_sent_at';
+  end if;
+  raise notice 'ok  waitlist_ranked shows confirmation_sent_at';
+end $$;
+
 \echo 'All waitlist tests passed.'

@@ -18,7 +18,12 @@ the licensed premises or get it delivered locally with an ID check.
    allocation engine: `reserve`, `run_draw`, `cancel_reservation`,
    `promote_waitlist`, `receive_drop_item`, `record_charge` and
    `forfeit_unclaimed`. Policy settings live in the `allocation_policy` table.
-4. [Market research](reports/Beer%20drop%20market%20research%20Hawaii.md)
+4. [Financial model](docs/finance/Chill%20Bottle%20Shop%20financial%20model.xlsx):
+   placeholder assumptions, startup costs and funding, a 36-month P&L, break-even
+   with a sensitivity grid, and a Budget Export tab
+   ([`budget-import.csv`](docs/finance/budget-import.csv)) for the admin's
+   Finance → Budget import. The business plan itself is a shared document.
+5. [Market research](reports/Beer%20drop%20market%20research%20Hawaii.md)
    (September 2026): Oʻahu competitors, trending styles, membership models and
    marketing, with the evidence quality flagged.
 
@@ -49,6 +54,17 @@ the email is skipped. `waitlist_signups.confirmation_sent_at` records each send,
 so rows where it's null can be re-sent later. To pick Founding invites,
 use the `waitlist_ranked` view (Founding interest first, then referrals, then
 signup date).
+
+## Staff admin
+
+`/admin` is the staff back end: overview, drops (create, add items, set status,
+run the draw, receive shipments, forfeit unclaimed orders), purchasing (POs,
+invoices and the 30-day payment rule), members (waitlist with CSV export,
+membership status, no-shows) and finance (monthly P&L actual vs budget,
+expenses, budget CSV import). Set `ADMIN_PASSWORD` and `ADMIN_SESSION_SECRET`
+(32+ characters) to turn it on; without them it stays disabled. It needs the
+same Supabase keys as the waitlist, and `supabase/migrations/20261004000000_finance.sql`
+applied for the finance pages.
 
 ## Running the schema tests
 
