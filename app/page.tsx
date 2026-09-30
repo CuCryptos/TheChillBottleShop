@@ -21,9 +21,9 @@ const steps = [
 ];
 
 const founding = [
-  "First access to every drop, ahead of regular members",
-  "Higher per-member limits on limited releases",
-  "First invites to member events at the shop",
+  "A guaranteed share of every standard drop you reserve in your Founding window",
+  "First in the draw for limited releases",
+  "First access and higher per-member limits on every drop",
   "Only 100 spots, offered to the waitlist first",
 ];
 
@@ -46,7 +46,7 @@ const faqs = [
   },
   {
     q: "What if a drop sells out?",
-    a: "You go on that drop's waitlist. When someone cancels, or a shipment comes in bigger than planned, the next person in line gets it automatically.",
+    a: "Limited releases use a fair draw, not a click race: enter any time during the window and the draw picks who gets it after it closes. If you're not picked, or a standard drop runs out, you go on that drop's waitlist, and when someone cancels or a shipment comes in bigger than planned, the next person in line gets it automatically.",
   },
 ];
 

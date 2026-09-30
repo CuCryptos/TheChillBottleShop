@@ -55,7 +55,7 @@ insert into drop_items (id, drop_id, product_id, planned_qty, price_cents) value
 -- Tests ---------------------------------------------------------------------
 select pg_temp.assert_raises(
   $$select reserve('00000000-0000-0000-0000-00000000000b', '00000000-0000-0000-0000-0000000000a1', 1)$$,
-  'reservations open for your tier', 'member tier cannot reserve before its early-access window');
+  'reservations open for you at', 'member tier cannot reserve before its early-access window');
 
 select pg_temp.assert_raises(
   $$select reserve('00000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-0000000000a1', 3)$$,
@@ -145,5 +145,13 @@ values ('PO-1', 'INV-1', current_date - 25, 100000);
 select pg_temp.assert_eq(
   (select days_remaining from purchase_orders_payment_due where po_number = 'PO-1'),
   5, 'invoice shows 5 days left under 30-day rule');
+
+-- Public API roles cannot call allocation functions.
+select pg_temp.assert_eq(
+  has_function_privilege('anon', 'reserve(uuid, uuid, integer, text)', 'execute')
+  or has_function_privilege('authenticated', 'reserve(uuid, uuid, integer, text)', 'execute')
+  or has_function_privilege('anon', 'receive_drop_item(uuid, integer)', 'execute')
+  or has_function_privilege('authenticated', 'cancel_reservation(uuid, text)', 'execute'),
+  false, 'API roles cannot execute allocation functions');
 
 \echo 'All allocation tests passed.'

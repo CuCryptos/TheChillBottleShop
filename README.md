@@ -14,9 +14,13 @@ the licensed premises or get it delivered locally with an ID check.
    to settle with counsel first.
 2. [Product spec](docs/02-product-spec.md): memberships, drops, the allocation
    lifecycle, payments and fulfillment.
-3. [Database schema](supabase/migrations/20260930000000_initial_schema.sql):
-   Postgres/Supabase tables plus the allocation engine (`reserve`,
-   `cancel_reservation`, `promote_waitlist`, `receive_drop_item`).
+3. [Database schema](supabase/migrations/): Postgres/Supabase tables plus the
+   allocation engine: `reserve`, `run_draw`, `cancel_reservation`,
+   `promote_waitlist`, `receive_drop_item`, `record_charge` and
+   `forfeit_unclaimed`. Policy settings live in the `allocation_policy` table.
+4. [Market research](reports/Beer%20drop%20market%20research%20Hawaii.md)
+   (September 2026): Oʻahu competitors, trending styles, membership models and
+   marketing, with the evidence quality flagged.
 
 ## The waitlist site (Phase 0)
 
@@ -47,10 +51,15 @@ Needs a Postgres 15+ server you can create databases on:
 DATABASE_URL=postgres://postgres@localhost:5432/postgres supabase/tests/run.sh
 ```
 
-The tests check tier early-access windows, per-member limits, ID and age
-requirements, waitlist promotion, the no-oversell guarantee, short-shipment
-reconciliation, the inventory ledger, the 30-day wholesaler invoice window, and
-the waitlist's age, ZIP, duplicate-email and referral rules.
+Each test file runs in its own fresh database. The tests check:
+
+- tier early-access windows, per-member limits, and the ID and age requirements;
+- the Founding guarantee, draw ranking and reproducibility, and no-show penalties;
+- waitlist promotion, the no-oversell guarantee and short-shipment reconciliation;
+- charging on arrival, pickup forfeiture and refunds, and the inventory ledger;
+- the 30-day wholesaler invoice window;
+- that the public API roles can't call the allocation functions;
+- the waitlist's age, ZIP, duplicate-email and referral rules.
 
 ## Status
 
