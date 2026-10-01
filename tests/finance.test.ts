@@ -122,3 +122,32 @@ test("budget CSV needs the header and rows", () => {
     if (!r.ok) assert.match(r.errors[0].message, msg);
   }
 });
+
+test("budget import accepts cells copied from a spreadsheet", () => {
+  // Excel/Sheets copy cells as tab-separated text; a wider selection adds empty
+  // trailing cells, and the note beside the header is ignored.
+  const r = parseBudgetCsv("month\tline\tamount\t\tPaste A:C (with header)\r\n2027-04\tbeer_sales\t8873\t\t\r\n2027-04\trefunds\t(160)\r\n2027-04\trent\t\"3,000\"\r\n");
+  assert.equal(r.ok, true);
+  if (r.ok) {
+    assert.deepEqual(r.rows, [
+      { month: "2027-04-01", line: "beer_sales", amount_cents: 887_300 },
+      { month: "2027-04-01", line: "refunds", amount_cents: -16_000 },
+      { month: "2027-04-01", line: "rent", amount_cents: 300_000 },
+    ]);
+  }
+  const semi = parseBudgetCsv("month;line;amount\n2027-04;rent;3000\n");
+  assert.equal(semi.ok, true);
+});
+
+test("budget import explains a missing header and rejects stray columns", () => {
+  const r = parseBudgetCsv("2027-04\tbeer_sales\t8873\n2027-04\trent\t3000\n");
+  assert.equal(r.ok, false);
+  if (!r.ok) assert.match(r.errors[0].message, /reads "2027-04 \| beer_sales \| 8873"\. Include the header row/);
+
+  const extra = parseBudgetCsv("month,line,amount\n2027-04,rent,3000,oops\n2027-04,beer_cogs,(10)\n");
+  assert.equal(extra.ok, false);
+  if (!extra.ok) {
+    assert.match(extra.errors[0].message, /Expected 3 columns, found 4/);
+    assert.match(extra.errors[1].message, /zero or more/);
+  }
+});

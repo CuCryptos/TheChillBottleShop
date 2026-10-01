@@ -1,5 +1,6 @@
 // Validates a budget CSV ("month,line,amount", month YYYY-MM, amount in dollars)
-// in full before anything is written, so an import is all-or-nothing.
+// in full before anything is written, so an import is all-or-nothing. Cells
+// copied straight out of Excel or Google Sheets (tab-separated) work too.
 import { parseCsv } from "./csv.ts";
 import { isMonth } from "./hawaii-time.ts";
 import { parseDollars } from "./money.ts";
@@ -13,14 +14,46 @@ export type BudgetImportResult =
 
 export const MAX_BUDGET_ROWS = 2000;
 
+const HEADER = ["month", "line", "amount"];
+
+/** Tab if the first non-blank line has one (a spreadsheet paste), else semicolon if it has no comma, else comma. */
+function detectDelimiter(text: string): string {
+  const first = text.split(/\r?\n|\r/).find((l) => l.trim() !== "") ?? "";
+  if (first.includes("\t")) return "\t";
+  if (first.includes(";") && !first.includes(",")) return ";";
+  return ",";
+}
+
+/** Drops empty cells at the end of a row (a spreadsheet selection wider than the data). */
+function trimTrailing(fields: string[]): string[] {
+  let n = fields.length;
+  while (n > 0 && fields[n - 1].trim() === "") n--;
+  return fields.slice(0, n);
+}
+
+function describe(fields: string[]): string {
+  const shown = fields.slice(0, 4).map((f) => f.trim()).join(" | ");
+  return shown.length > 80 ? `${shown.slice(0, 77)}...` : shown;
+}
+
 export function parseBudgetCsv(text: string): BudgetImportResult {
-  const records = parseCsv(text.replace(/^﻿/, "")).filter((r) => r.fields.some((f) => f.trim() !== ""));
+  const clean = text.replace(/^﻿/, "");
+  const records = parseCsv(clean, detectDelimiter(clean))
+    .map((r) => ({ line: r.line, fields: trimTrailing(r.fields) }))
+    .filter((r) => r.fields.length > 0);
   if (records.length === 0) return { ok: false, errors: [{ line: 1, message: "Paste a CSV with the header month,line,amount." }] };
 
   const [head, ...body] = records;
-  const header = head.fields.map((f) => f.trim().toLowerCase());
-  if (header.join(",") !== "month,line,amount") {
-    return { ok: false, errors: [{ line: head.line, message: 'The first row must be the header "month,line,amount".' }] };
+  // Only the first three header cells count, so a note beside the table is fine.
+  const header = head.fields.slice(0, 3).map((f) => f.trim().toLowerCase());
+  if (header.join(",") !== HEADER.join(",")) {
+    return {
+      ok: false,
+      errors: [{
+        line: head.line,
+        message: `The first row must be the header "month,line,amount", but it reads "${describe(head.fields)}". Include the header row when you copy.`,
+      }],
+    };
   }
   if (body.length === 0) return { ok: false, errors: [{ line: head.line, message: "No budget rows after the header." }] };
   if (body.length > MAX_BUDGET_ROWS) {
@@ -41,7 +74,10 @@ export function parseBudgetCsv(text: string): BudgetImportResult {
     if (!isMonth(month)) problems.push(`month "${month}" must be YYYY-MM`);
     if (!isPnlLine(slug)) problems.push(`unknown line "${slug}"`);
     // Refunds are negative revenue; accept either sign and store it negative.
-    let cents = parseDollars(amount, { allowNegative: slug === "refunds" });
+    // Accounting format shows negatives as (160).
+    const paren = /^\((.*)\)$/.exec(amount);
+    let cents = paren ? parseDollars(paren[1]) : parseDollars(amount, { allowNegative: slug === "refunds" });
+    if (paren && cents !== null) cents = slug === "refunds" ? -cents : null;
     if (cents === null) problems.push(`amount "${amount}" must be a dollar amount${slug === "refunds" ? "" : " of zero or more"}`);
     else if (slug === "refunds") cents = -Math.abs(cents);
 
