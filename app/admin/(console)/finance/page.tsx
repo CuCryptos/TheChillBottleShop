@@ -152,7 +152,8 @@ export default async function Finance({ searchParams }: { searchParams: SearchPa
       <section className="admin-section">
         <h2>Import budget</h2>
         <p className="muted small">
-          Paste CSV with the header <code>month,line,amount</code>: month as YYYY-MM, amount in dollars. Lines:{" "}
+          Paste CSV with the header <code>month,line,amount</code>, or copy columns A:C (header included) straight from
+          the model&apos;s Budget Export tab: month as YYYY-MM, amount in dollars. Lines:{" "}
           <code>beer_sales</code>, <code>refunds</code> (stored negative), <code>membership_fees</code>, <code>beer_cogs</code>,{" "}
           {OPEX_LINES.map((l) => <span key={l.slug}><code>{l.slug}</code>, </span>)}
           <code>depreciation</code>, <code>interest</code>. Existing amounts for the same month and line are replaced; if any

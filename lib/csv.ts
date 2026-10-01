@@ -18,8 +18,9 @@ export function toCsv(header: readonly string[], rows: readonly (readonly unknow
 /**
  * Splits CSV text into records of fields, honoring quoted fields ("a, b" and
  * "" escapes). Each record carries the 1-based line number it starts on.
+ * Pass "\t" to read cells copied from a spreadsheet (tab-separated).
  */
-export function parseCsv(text: string): { line: number; fields: string[] }[] {
+export function parseCsv(text: string, delimiter = ","): { line: number; fields: string[] }[] {
   const records: { line: number; fields: string[] }[] = [];
   let fields: string[] = [];
   let field = "";
@@ -43,7 +44,7 @@ export function parseCsv(text: string): { line: number; fields: string[] }[] {
       else if (c === '"') quoted = false;
       else { if (c === "\n") line++; field += c; }
     } else if (c === '"') { quoted = true; touched = true; }
-    else if (c === ",") { fields.push(field); field = ""; touched = true; }
+    else if (c === delimiter) { fields.push(field); field = ""; touched = true; }
     else if (c === "\n" || c === "\r") {
       if (c === "\r" && text[i + 1] === "\n") i++;
       endRecord();
